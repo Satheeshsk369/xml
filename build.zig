@@ -1,18 +1,24 @@
 const std = @import("std");
 
-pub fn build(b: *std.build.Builder) void {
+pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
-    const mode = b.standardReleaseOptions();
+    const optimize = b.standardOptimizeOption(.{});
 
-    const lib = b.addStaticLibrary("xml", "Xml.zig");
-    lib.setTarget(target);
-    lib.setBuildMode(mode);
-    lib.install();
+    const lib = b.addStaticLibrary(.{
+        .name = "xml",
+        .root_source_file = b.path("Xml.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    b.installArtifact(lib);
 
-    const main_tests = b.addTest("Xml.zig");
-    main_tests.setTarget(target);
-    main_tests.setBuildMode(mode);
+    const main_tests = b.addTest(.{
+        .root_source_file = b.path("Xml.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    const run_main_tests = b.addRunArtifact(main_tests);
 
     const test_step = b.step("test", "Run library tests");
-    test_step.dependOn(&main_tests.step);
+    test_step.dependOn(&run_main_tests.step);
 }
